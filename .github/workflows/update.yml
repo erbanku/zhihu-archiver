@@ -19,26 +19,31 @@ jobs:
     - uses: actions/checkout@v1
       with:
         ref: "master"
+    
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.12'
+        python-version: '3.8'
+    
     - name: Run script with retries
       run: |
         sudo timedatectl set-timezone "Asia/Shanghai"
         for i in {1..3}; do
           pip install -r requirements.txt && python ./main.py && break || sleep 60
         done
-    - name: update readme
+
+    - name: Update readme
       env:
         GIT_USER: "Github Action"
         GIT_EMAIL: "action@github.com"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        git config user.name "$GIT_USER"
+        git config user.email "$GIT_EMAIL"
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        
+        # Try to commit and push changes up to 3 times
         for i in {1..3}; do
-          git config user.name "${GIT_USER}"
-          git config user.email "${GIT_EMAIL}"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
-          git checkout master
           git add .
-          git commit -m "Update by Github Action"
+          git commit -m "Update by Github Action" || true
           git push -u origin master && break || sleep 60
         done
