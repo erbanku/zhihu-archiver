@@ -7,6 +7,19 @@ from fetcher import fetch
 base_path = "docs"
 
 
+def sort_year_month_dirs(path):
+    """Sort year-month directories (e.g., '2022-1', '2022-10') numerically."""
+    if '-' in path and all(p.isdigit() for p in path.split('-')):
+        return tuple(map(int, path.split('-')))
+    return (float('inf'),)
+
+
+def sort_day_files(filename):
+    """Sort day files (e.g., '01.md', '02.md') numerically by day."""
+    day = filename.split('.')[0]
+    return int(day) if day.isdigit() else float('inf')
+
+
 def write_content(data, title, time, path):
     with open(path, 'w', encoding='utf-8') as f:
         f.write(f"# {title}\n\n")
@@ -25,7 +38,7 @@ def build_toc():
     with open(os.path.join(base_path, 'toc.md'), 'w', encoding='utf-8') as f:
         f.write(f"* [介绍](/)\n")
         paths = os.listdir(base_path)
-        paths.sort()
+        paths.sort(key=sort_year_month_dirs)
         for path in paths:
             full_path = os.path.join(base_path, path)
             if not os.path.isdir(full_path):
@@ -33,7 +46,7 @@ def build_toc():
             year, month = path.split('-')
             f.write(f"* [{year} 年 {month} 月]({path}/)\n")
             sub_files = os.listdir(full_path)
-            sub_files.sort()
+            sub_files.sort(key=sort_day_files)
             for file in sub_files:
                 if file == 'README.md':
                     continue
@@ -46,7 +59,7 @@ def update_chapter(chapter_str):
         year, month = chapter_str.split('-')
         f.write(f"# {year} 年 {month} 月\n\n")
         paths = os.listdir(os.path.join(base_path, chapter_str))
-        paths.sort()
+        paths.sort(key=sort_day_files)
         for path in paths:
             if path == 'README.md':
                 continue
