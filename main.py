@@ -25,7 +25,7 @@ def build_toc():
     with open(os.path.join(base_path, 'toc.md'), 'w', encoding='utf-8') as f:
         f.write(f"* [介绍](/)\n")
         paths = os.listdir(base_path)
-        paths.sort()
+        paths.sort(key=lambda x: tuple(map(int, x.split('-'))) if '-' in x and all(p.isdigit() for p in x.split('-')) else (float('inf'),))
         for path in paths:
             full_path = os.path.join(base_path, path)
             if not os.path.isdir(full_path):
@@ -33,7 +33,7 @@ def build_toc():
             year, month = path.split('-')
             f.write(f"* [{year} 年 {month} 月]({path}/)\n")
             sub_files = os.listdir(full_path)
-            sub_files.sort()
+            sub_files.sort(key=lambda x: int(x.split('.')[0]) if x.split('.')[0].isdigit() else float('inf'))
             for file in sub_files:
                 if file == 'README.md':
                     continue
@@ -46,7 +46,7 @@ def update_chapter(chapter_str):
         year, month = chapter_str.split('-')
         f.write(f"# {year} 年 {month} 月\n\n")
         paths = os.listdir(os.path.join(base_path, chapter_str))
-        paths.sort()
+        paths.sort(key=lambda x: int(x.split('.')[0]) if x.split('.')[0].isdigit() else float('inf'))
         for path in paths:
             if path == 'README.md':
                 continue
