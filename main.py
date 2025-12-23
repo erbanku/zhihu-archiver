@@ -57,7 +57,8 @@ def build_toc():
 def build_latest():
     """Create a latest.md file that redirects to the most recent scrape."""
     paths = os.listdir(base_path)
-    paths = [p for p in paths if os.path.isdir(os.path.join(base_path, p)) and '-' in p]
+    paths = [p for p in paths if os.path.isdir(os.path.join(base_path, p)) and '-' in p 
+             and all(part.isdigit() for part in p.split('-'))]
     paths.sort(key=sort_year_month_dirs, reverse=True)
     
     if not paths:
@@ -78,7 +79,6 @@ def build_latest():
     with open(os.path.join(base_path, 'latest.md'), 'w', encoding='utf-8') as f:
         f.write(f"# 最新热榜存档\n\n")
         f.write(f"正在跳转到最新的热榜存档：[{year} 年 {month} 月 {day} 日]({latest_month}/{latest_file})\n\n")
-        f.write(f'<meta http-equiv="refresh" content="0; url=#/{latest_month}/{latest_file}">\n')
         f.write(f'<script>window.location.href = "#/{latest_month}/{latest_file}";</script>\n')
 
 
