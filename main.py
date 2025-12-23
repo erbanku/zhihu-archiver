@@ -38,7 +38,7 @@ def build_toc():
     with open(os.path.join(base_path, 'toc.md'), 'w', encoding='utf-8') as f:
         f.write(f"* [介绍](/)\n")
         paths = os.listdir(base_path)
-        paths.sort(key=sort_year_month_dirs)
+        paths.sort(key=sort_year_month_dirs, reverse=True)
         for path in paths:
             full_path = os.path.join(base_path, path)
             if not os.path.isdir(full_path):
@@ -46,12 +46,40 @@ def build_toc():
             year, month = path.split('-')
             f.write(f"* [{year} 年 {month} 月]({path}/)\n")
             sub_files = os.listdir(full_path)
-            sub_files.sort(key=sort_day_files)
+            sub_files.sort(key=sort_day_files, reverse=True)
             for file in sub_files:
                 if file == 'README.md':
                     continue
                 day = file.split('.')[0]
                 f.write(f"  * [{month} 月 {day} 日]({path}/{file})\n")
+
+
+def build_latest():
+    """Create a latest.md file that redirects to the most recent scrape."""
+    paths = os.listdir(base_path)
+    paths = [p for p in paths if os.path.isdir(os.path.join(base_path, p)) and '-' in p 
+             and all(part.isdigit() for part in p.split('-'))]
+    paths.sort(key=sort_year_month_dirs, reverse=True)
+    
+    if not paths:
+        return
+    
+    latest_month = paths[0]
+    month_path = os.path.join(base_path, latest_month)
+    sub_files = [f for f in os.listdir(month_path) if f.endswith('.md') and f != 'README.md']
+    sub_files.sort(key=sort_day_files, reverse=True)
+    
+    if not sub_files:
+        return
+    
+    latest_file = sub_files[0]
+    year, month = latest_month.split('-')
+    day = latest_file.split('.')[0]
+    
+    with open(os.path.join(base_path, 'latest.md'), 'w', encoding='utf-8') as f:
+        f.write(f"# 最新热榜存档\n\n")
+        f.write(f"正在跳转到最新的热榜存档：[{year} 年 {month} 月 {day} 日]({latest_month}/{latest_file})\n\n")
+        f.write(f'<script>window.location.href = "#/{latest_month}/{latest_file}";</script>\n')
 
 
 def update_chapter(chapter_str):
@@ -83,6 +111,7 @@ def main():
     update_chapter(chapter_str)
     copyfile("./README.md", "./docs/README.md")
     build_toc()
+    build_latest()
 
 
 if __name__ == '__main__':

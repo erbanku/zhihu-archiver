@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>知乎热榜备份</title>
+    <title>知乎热榜备份 - Zhihu Hot Archive</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="description" content="知乎热榜每日自动抓取，之后转换成 Markdown 文件并构造静态网站">
     <meta name="viewport"
@@ -12,33 +12,264 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/sidebar.min.css" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-darklight-theme@3/dist/style.min.css" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
-    <!-- Theme: Defaults -->
-    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-defaults.css"> -->
 
     <style>
-        * {
-            font-family: "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        :root {
+            --theme-color: #0066ff;
+            --theme-color-dark: #0052cc;
+            --theme-color-light: #4d94ff;
+            --sidebar-bg: #f8f9fa;
+            --sidebar-width: 300px;
+            --base-font-size: 16px;
+            --heading-color: #2c3e50;
+            --text-color: #34495e;
+            --border-color: #e1e4e8;
+            --link-color: #0066ff;
+            --link-hover-color: #0052cc;
+            --code-bg: #f6f8fa;
         }
 
+        * {
+            font-family: "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+
+        body {
+            font-size: var(--base-font-size);
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        /* Modern Sidebar Styling */
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .sidebar-nav ul {
+            padding: 0 20px;
+        }
+
+        .sidebar-nav li {
+            margin: 4px 0;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-color);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            padding: 6px 12px;
+            display: block;
+        }
+
+        .sidebar-nav a:hover {
+            color: var(--theme-color);
+            background-color: rgba(0, 102, 255, 0.08);
+        }
+
+        .sidebar-nav li.active > a {
+            color: var(--theme-color);
+            font-weight: 600;
+            background-color: rgba(0, 102, 255, 0.12);
+        }
+
+        /* App Name Styling */
         .app-name {
-            font-weight: bold !important;
+            font-weight: 700 !important;
+            font-size: 1.4rem !important;
+            padding: 20px !important;
+            margin: 0 0 10px 0 !important;
+            color: var(--heading-color) !important;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .app-name-link {
+            color: var(--heading-color) !important;
+        }
+
+        /* Content Area */
+        .content {
+            padding-top: 30px;
+        }
+
+        .markdown-section {
+            max-width: 900px;
+            padding: 30px 45px 60px;
+        }
+
+        .markdown-section h1 {
+            color: var(--heading-color);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--theme-color);
+        }
+
+        .markdown-section h2 {
+            color: var(--heading-color);
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .markdown-section h3 {
+            color: var(--heading-color);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.8rem;
+        }
+
+        .markdown-section a {
+            color: var(--link-color);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .markdown-section a:hover {
+            color: var(--link-hover-color);
+            text-decoration: underline;
+        }
+
+        .markdown-section code {
+            background-color: var(--code-bg);
+            color: #d73a49;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .markdown-section pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            background-color: transparent;
+            border: none;
+            width: 36px;
+            height: 36px;
+            padding: 8px;
+            transition: background-color 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: rgba(0, 102, 255, 0.1);
         }
 
         .sidebar-toggle-button span {
-            background-color: black;
+            background-color: var(--heading-color);
+            height: 2px;
+            width: 20px;
         }
 
+        /* Search Box */
+        .search {
+            margin: 15px 20px;
+            padding: 0;
+        }
+
+        .search input {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .search input:focus {
+            outline: none;
+            border-color: var(--theme-color);
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+
+        /* Cover Page */
+        .cover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .cover-main {
+            margin: -20px auto 80px;
+        }
+
+        .cover h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .cover blockquote {
+            font-size: 1.2rem;
+            margin: 2rem auto;
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 768px) {
+            .markdown-section {
+                padding: 20px 25px 40px;
+            }
+
+            .markdown-section h1 {
+                font-size: 2rem;
+            }
+
+            .markdown-section h2 {
+                font-size: 1.6rem;
+            }
+
+            .markdown-section h3 {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Loading Animation */
+        .app-nav,
+        .github-corner {
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 
 <body>
-    <div id="app"></div>
+    <div id="app">加载中...</div>
     <script>
         window.$docsify = {
             name: '知乎热榜备份',
             loadSidebar: 'toc.md',
             subMaxLevel: 3,
-            search: 'auto'
+            search: {
+                placeholder: '搜索',
+                noData: '没有结果',
+                depth: 3
+            },
+            auto2top: true,
+            homepage: 'latest.md',
+            notFoundPage: true,
+            executeScript: true,
+            formatUpdated: '{YYYY}-{MM}-{DD} {HH}:{mm}',
+            plugins: [
+                function(hook, vm) {
+                    hook.beforeEach(function(content) {
+                        return content;
+                    });
+                }
+            ]
         }
 
     </script>
