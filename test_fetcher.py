@@ -25,8 +25,9 @@ def test_fetch():
             print(f"\n{i}. {item['title']}")
             print(f"   Link: {item['link']}")
             print(f"   Hot: {item['hot']}")
-            if item['description']:
-                desc = item['description'][:100] + "..." if len(item['description']) > 100 else item['description']
+            desc = item.get('description') or ''
+            if desc:
+                desc = desc[:100] + "..." if len(desc) > 100 else desc
                 print(f"   Description: {desc}")
         
         print("\n" + "=" * 60)

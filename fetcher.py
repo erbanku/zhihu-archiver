@@ -131,16 +131,29 @@ def fetch_by_api():
                 target = item.get('target', {})
                 item_id = target.get('id', '')
                 
+                if not item_id:
+                    print(f"Warning: Empty item_id, skipping item")
+                    continue
+                
                 # Determine the link based on the type
                 target_type = target.get('type', 'question')
                 if target_type == 'answer':
-                    link = f"https://www.zhihu.com/question/{target.get('question', {}).get('id', '')}/answer/{item_id}"
+                    question_id = target.get('question', {}).get('id', '')
+                    if question_id:
+                        link = f"https://www.zhihu.com/question/{question_id}/answer/{item_id}"
+                    else:
+                        link = f"https://www.zhihu.com/question/{item_id}"
                 else:
                     link = f"https://www.zhihu.com/question/{item_id}"
                 
+                # Get title, preferring target.title over question.title
+                title = target.get('title')
+                if not title:
+                    title = target.get('question', {}).get('title', 'Unknown')
+                
                 result = {
                     "link": link,
-                    "title": target.get('title', target.get('question', {}).get('title', 'Unknown')),
+                    "title": title,
                     "description": target.get('excerpt', ''),
                     "hot": item.get('detail_text', '')
                 }
