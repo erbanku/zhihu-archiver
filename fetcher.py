@@ -209,25 +209,37 @@ def fetch_by_api():
 
 
 def fetch():
-    # Try API first (more reliable when it works)
-    print("Attempting to fetch from API...")
-    try:
-        data = fetch_by_api()
-        print(f"Successfully fetched {len(data)} items from API")
-        return data
-    except Exception as e:
-        print(f"API fetch failed: {e}")
+    max_retries = 2
+    retry_delay = 3
 
-    # Add a delay before trying HTML parsing
-    print("Waiting 2 seconds before trying HTML parsing...")
-    time.sleep(2)
+    for attempt in range(max_retries):
+        # Try API first (more reliable when it works)
+        print(f"Attempt {attempt + 1}/{max_retries}: Attempting to fetch from API...")
+        try:
+            data = fetch_by_api()
+            print(f"Successfully fetched {len(data)} items from API")
+            return data
+        except Exception as e:
+            print(f"API fetch failed: {e}")
 
-    # Fallback to HTML parsing
-    print("Attempting to fetch from HTML...")
-    try:
-        data = fetch_by_html()
-        print(f"Successfully fetched {len(data)} items from HTML")
-        return data
-    except Exception as e:
-        print(f"HTML fetch failed: {e}")
-        raise Exception("Both API and HTML fetching failed")
+        # Add a delay before trying HTML parsing
+        if attempt < max_retries - 1:
+            print(f"Waiting {retry_delay} seconds before trying HTML parsing...")
+            time.sleep(retry_delay)
+
+        # Fallback to HTML parsing
+        print(f"Attempt {attempt + 1}/{max_retries}: Attempting to fetch from HTML...")
+        try:
+            data = fetch_by_html()
+            print(f"Successfully fetched {len(data)} items from HTML")
+            return data
+        except Exception as e:
+            print(f"HTML fetch failed: {e}")
+
+        # If not the last attempt, wait before retrying
+        if attempt < max_retries - 1:
+            wait_time = retry_delay * (attempt + 1)
+            print(f"Waiting {wait_time} seconds before retry {attempt + 2}...")
+            time.sleep(wait_time)
+
+    raise Exception("Both API and HTML fetching failed after all retries")
