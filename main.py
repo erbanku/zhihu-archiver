@@ -96,7 +96,13 @@ def update_chapter(chapter_str):
 
 
 def main():
-    data = fetch()
+    try:
+        data = fetch()
+    except Exception as e:
+        print(f"Error: Failed to fetch data: {e}")
+        print("Exiting without updating files.")
+        return
+
     time = datetime.datetime.now()
     year, month, day = time.year, time.month, time.day
     time_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
