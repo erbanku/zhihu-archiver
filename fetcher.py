@@ -1,30 +1,53 @@
 import requests
 from bs4 import BeautifulSoup
+import time
 
+# Updated headers to better mimic a real browser
 headers = {
-    "authority": "www.zhihu.com",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
-    "referer": "https://www.zhihu.com/",
-    "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": '"Windows"',
-    "sec-fetch-dest": "document",
-    "sec-fetch-mode": "navigate",
-    "sec-fetch-site": "same-origin",
-    "sec-fetch-user": "?1",
-    "upgrade-insecure-requests": "1"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+    "Accept-Encoding": "gzip, deflate, br",
+    "DNT": "1",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Cache-Control": "max-age=0"
 }
+
+
+def create_session():
+    """Create a session with cookies by visiting the main page first."""
+    session = requests.Session()
+    session.headers.update(headers)
+
+    try:
+        # Visit main page first to get cookies
+        print("Initializing session by visiting zhihu.com...")
+        response = session.get("https://www.zhihu.com", timeout=15, allow_redirects=True)
+        print(f"Session initialized with status code: {response.status_code}")
+        # Add a small delay to mimic human behavior
+        time.sleep(1)
+        return session
+    except Exception as e:
+        print(f"Warning: Failed to initialize session: {e}")
+        return session
 
 
 def fetch_by_html():
     try:
-        res = requests.get("https://www.zhihu.com/hot", headers=headers, timeout=10)
+        # Create a session with cookies
+        session = create_session()
+
+        # Make the request to hot page
+        res = session.get("https://www.zhihu.com/hot", timeout=15, allow_redirects=True)
         if res.status_code != 200:
             print(f"HTML request failed with status code: {res.status_code}")
             raise Exception(f"HTTP status code {res.status_code}")
-        
+
         html = res.text
         soup = BeautifulSoup(html, 'html.parser')
         
@@ -112,7 +135,21 @@ def fetch_by_html():
 
 def fetch_by_api():
     try:
-        res = requests.get("https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total", headers=headers, timeout=10)
+        # Create a session with cookies
+        session = create_session()
+
+        # Update headers for API request
+        api_headers = headers.copy()
+        api_headers.update({
+            "Accept": "application/json, text/plain, */*",
+            "Referer": "https://www.zhihu.com/hot",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin"
+        })
+
+        res = session.get("https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total",
+                         headers=api_headers, timeout=15, allow_redirects=True)
         if res.status_code != 200:
             print(f"API request failed with status code: {res.status_code}")
             raise Exception(f"API returned status code {res.status_code}")
@@ -172,7 +209,7 @@ def fetch_by_api():
 
 
 def fetch():
-    # Try API first (more reliable)
+    # Try API first (more reliable when it works)
     print("Attempting to fetch from API...")
     try:
         data = fetch_by_api()
@@ -180,7 +217,11 @@ def fetch():
         return data
     except Exception as e:
         print(f"API fetch failed: {e}")
-    
+
+    # Add a delay before trying HTML parsing
+    print("Waiting 2 seconds before trying HTML parsing...")
+    time.sleep(2)
+
     # Fallback to HTML parsing
     print("Attempting to fetch from HTML...")
     try:
